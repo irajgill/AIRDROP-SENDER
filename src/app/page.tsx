@@ -1,103 +1,51 @@
-import Image from "next/image";
+"use client"
+
+import dynamic from "next/dynamic"
+
+const HomeContent = dynamic(() => import("@/components/HomeContent"), {
+    ssr: false,
+})
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    return <HomeContent />
 }
+
+// // Why do we need the dynamic import here instead of just hosting the HomeContent here?
+// This is happening because of how wagmi (and other Web3 libraries) interact with Next.js's server-side rendering (SSR). Let me explain why:
+
+// By default, Next.js pages are server-side rendered, meaning the initial HTML is generated on the server.
+// wagmi hooks (like useAccount, useConnect, etc.) need access to the browser's window object and Web3 functionality, which only exists on the client side. When Next.js tries to render these components on the server, it can't access these browser-specific features.
+// When the page loads in the browser, React tries to "hydrate" the server-rendered HTML with the client-side JavaScript. However, the state of your Web3 components on the client side (with actual wallet connections, etc.) doesn't match the server-rendered version (which couldn't access Web3 features), causing hydration errors.
+
+// Your current solution using dynamic with ssr: false works because it:
+
+// Skips server-side rendering for the component entirely
+// Only loads and renders the component on the client side
+// Prevents any hydration mismatches since there's no server-rendered content to hydrate
+
+// You could alternatively keep the components in page.tsx if you:
+
+// Use React's useEffect to handle any Web3 interactions
+// Handle loading states appropriately
+// Use wagmi's useMounted hook
+
+// But the dynamic import approach is cleaner and more reliable for Web3 components. It's a common pattern in Next.js Web3 applications.
+
+// Example:
+
+// // Without dynamic - Still processes import on server
+// 'use client'
+// import HomeContent from '@/components/HomeContent'  // ← Server still sees this
+// export default function Page() {
+//   return <HomeContent />  // ← Attempts initial server render
+// }
+
+// // With dynamic - Server completely ignores the component
+// 'use client'
+// const HomeContent = dynamic(
+//   () => import('@/components/HomeContent'),
+//   { ssr: false }
+// )  // ← Server skips this entirely
+// export default function Page() {
+//   return <HomeContent />  // ← Only renders on client
+// }
