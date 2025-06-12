@@ -25,8 +25,8 @@ Before running this project, ensure you have one of the following package manage
 
 1. Clone the repository:
 
-git clone https://github.com/irajgill/AIRDROP-SENDER.git
-cd AIRDROP-SENDER
+- git clone https://github.com/irajgill/AIRDROP-SENDER.git
+- cd AIRDROP-SENDER
 
 
 2. Install dependencies:
